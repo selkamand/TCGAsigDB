@@ -91,7 +91,7 @@ create_tcga_pancan_database <- function(outdir = getwd()){
   df_pancan <- data.table::fread("https://tcga-pancan-atlas-hub.s3.us-east-1.amazonaws.com/download/mc3.v0.2.8.PUBLIC.xena.gz")
 
   cli::cli_progress_step('Converting to MAF format')
-  maf <- data.table::fread(path_maf) |>
+  maf <- df_pancan |>
     dplyr::rename(
       Tumor_Sample_Barcode = sample,
       Chromosome = chr,
@@ -105,7 +105,7 @@ create_tcga_pancan_database <- function(outdir = getwd()){
     )
 
   cli::cli_progress_step('Running Signature Analysis and Creating SQLITE database')
-  create_database(outdir = outdir, prefix = "TCGA_mc3_pancanatlas", ref = "hg19")
+  create_database(maf = maf, outdir = outdir, prefix = "TCGA_mc3_pancanatlas", ref = "hg19")
 
   return(invisible(NULL))
 }
