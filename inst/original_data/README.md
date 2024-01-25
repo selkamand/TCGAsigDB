@@ -9,7 +9,7 @@ TCGA Unified Ensemble "MC3" mutation calls. This work is described in Scalable O
 **Downloaded**
 
 ```         
-aria2c "https://tcga-pancan-atlas-hub.s3.us-east-1.amazonaws.com/download/mc3.v0.2.8.PUBLIC.xena.gz
+aria2c "https://tcga-pancan-atlas-hub.s3.us-east-1.amazonaws.com/download/mc3.v0.2.8.PUBLIC.xena.gz"
 ```
 
 **Processing**
