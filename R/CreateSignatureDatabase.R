@@ -13,21 +13,27 @@
 #' path_maf <- system.file("original_data/mc3.v0.2.8.PUBLIC.xena.gz", package = "TCGAsigDB")
 #'
 #' # Fix Column Names
-#' maf = data.table::fread(path_maf) |>
-#  dplyr::rename(
-#    Tumor_Sample_Barcode = sample,
-#    Chromosome = chr,
-#    Start_Position = start,
-#    End_Position = end,
-#    Reference_Allele = reference,
-#    Tumor_Seq_Allele2 = alt,
-#    Hugo_Symbol = gene,
-#    Consequence = effect,
-#    HGVSp_Short = Amino_Acid_Change
-#  )
-
+#' maf <- data.table::fread(path_maf) |>
+#'   dplyr::rename(
+#'     Tumor_Sample_Barcode = sample,
+#'     Chromosome = chr,
+#'     Start_Position = start,
+#'     End_Position = end,
+#'     Reference_Allele = reference,
+#'     Tumor_Seq_Allele2 = alt,
+#'     Hugo_Symbol = gene,
+#'     Consequence = effect,
+#'     HGVSp_Short = Amino_Acid_Change
+#'   )
+#'
 #' create_database(maf, ref = 'hg19', prefix = "TCGA_mc3_pancanatlas")
+#'
+#' # Or we can pull the data from maftools
+#' mafs <- lapply(maftools::tcgaAvailable()[['Study_Abbreviation']], maftools::tcgaLoad)
+#' merged_mafs <- maftools::merge_mafs(mafs)
 #' }
+#'
+#' create_database(merged_mafs, ref = 'hg19', prefix = "TCGA_mc3_maftools")
 create_database <- function(maf, ref = c("hg38", "hg19"), outdir = getwd(), prefix = "cosmic_signatures"){
 
   # Set up
