@@ -48,7 +48,7 @@ create_database <- function(maf, ref = c("hg38", "hg19"), outdir = getwd(), pref
     assertions::assert_class(maf, class = "MAF")
 
   if(is.data.frame(maf))
-    sigminer::read_maf_minimal(maf = maf)
+    sigminer::read_maf_minimal(maf)
 
   if(is.character(maf))
     maf <- sigminer::read_maf_minimal(maf = data.table::fread(maf))
@@ -56,6 +56,7 @@ create_database <- function(maf, ref = c("hg38", "hg19"), outdir = getwd(), pref
 
   sample_ids = unique(maf@data[['Tumor_Sample_Barcode']])
 
+  cli::cli_progress_step('analysing mutations')
   # Sigminer
   sigminerUtils::sig_analyse_mutations(
     maf = maf,
@@ -69,7 +70,10 @@ create_database <- function(maf, ref = c("hg38", "hg19"), outdir = getwd(), pref
 
 
   #sigminerUtils::sig_create_database(sqlite_db = "cosmic_signatures.hg19.sqlite", overwrite = TRUE)
+  cli::cli_progress_step('creating database')
   sigminerUtils::sig_create_database(sqlite_db = glue::glue("{outdir}/{prefix}.{ref}.sqlite"), overwrite = TRUE)
+
+  cli::cli_progress_step('Adding to  database')
   sigminerUtils::sig_add_to_database(signature_directory = "{outdir}/signatures", sqlite_db = as.character(glue::glue("{outdir}/{prefix}.{ref}.sqlite")),ref = ref)
 }
 
