@@ -48,10 +48,10 @@ create_database <- function(maf, ref = c("hg38", "hg19"), outdir = getwd(), pref
     assertions::assert_class(maf, class = "MAF")
 
   if(is.data.frame(maf))
-    sigminer::read_maf_minimal(maf)
+    maf <- sigminer::read_maf_minimal(maf)
 
   if(is.character(maf))
-    maf <- sigminer::read_maf_minimal(maf = data.table::fread(maf))
+    maf <- sigminer::read_maf_minimal(data.table::fread(maf))
 
 
   sample_ids = unique(maf@data[['Tumor_Sample_Barcode']])
