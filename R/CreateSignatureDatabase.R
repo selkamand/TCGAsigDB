@@ -62,7 +62,7 @@ create_database <- function(maf, ref = c("hg38", "hg19"), outdir = getwd(), pref
     maf = maf,
     somatic_ids = sample_ids,
     ref = ref,
-    output_dir = "{outdir}/signatures",
+    output_dir = glue::glue("{outdir}/signatures"),
     exposure_type = "absolute",
     n_bootstraps = 100,
     temp_dir = tempdir()
@@ -74,7 +74,11 @@ create_database <- function(maf, ref = c("hg38", "hg19"), outdir = getwd(), pref
   sigminerUtils::sig_create_database(sqlite_db = glue::glue("{outdir}/{prefix}.{ref}.sqlite"), overwrite = TRUE)
 
   cli::cli_progress_step('Adding to  database')
-  sigminerUtils::sig_add_to_database(signature_directory = "{outdir}/signatures", sqlite_db = as.character(glue::glue("{outdir}/{prefix}.{ref}.sqlite")),ref = ref)
+  sigminerUtils::sig_add_to_database(
+    signature_directory = glue::glue("{outdir}/signatures"),
+    sqlite_db = as.character(glue::glue("{outdir}/{prefix}.{ref}.sqlite")),
+    ref = ref
+  )
 }
 
 
