@@ -4,3 +4,5 @@
 ^README\.Rmd$
 ^cran-comments\.md$
 ^original_data/
+TCGA_mc3_pancanatlas.hg19.sqlite
+signatures
