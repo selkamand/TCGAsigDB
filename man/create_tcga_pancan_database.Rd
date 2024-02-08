@@ -4,10 +4,12 @@
 \alias{create_tcga_pancan_database}
 \title{Create TCGA pan-cancer-atlas signature database}
 \usage{
-create_tcga_pancan_database(outdir = getwd())
+create_tcga_pancan_database(outdir = getwd(), ids = NULL)
 }
 \arguments{
 \item{outdir}{output directory}
+
+\item{ids}{a character vector of TCGA IDs to analyse. If NULL will run on all TCGA samples}
 }
 \value{
 run for its side-effects. Invisibly returns NULL
@@ -16,5 +18,7 @@ run for its side-effects. Invisibly returns NULL
 Creates an sqlite database describing the mutational signatures present in every TCGA patient
 }
 \examples{
-\dontrun({create_tcga_pancan_database})
+\dontrun{
+create_tcga_pancan_database(ids = c('TCGA-CA-6717-01', 'TCGA-A2-A0T5-01', 'TCGA-CF-A9FF-01'))
+}
 }

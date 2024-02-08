@@ -7,14 +7,19 @@
 create_database(
   maf,
   ref = c("hg38", "hg19"),
+  metadata = NULL,
   outdir = getwd(),
   prefix = "cosmic_signatures"
 )
 }
 \arguments{
+\item{maf}{a maf object, path to maf file, or data.frame in MAF format}
+
 \item{ref}{which human reference genome to use}
 
-\item{path_maf}{path to a maf file (e.g. pancancer MAF)  or a maf object}
+\item{outdir}{outfile directory}
+
+\item{prefix}{prefix of output filenames}
 }
 \value{
 invisible(NULL)
@@ -45,7 +50,8 @@ create_database(maf, ref = 'hg19', prefix = "TCGA_mc3_pancanatlas")
 # Or we can pull the data from maftools
 mafs <- lapply(maftools::tcgaAvailable()[['Study_Abbreviation']], maftools::tcgaLoad)
 merged_mafs <- maftools::merge_mafs(mafs)
-}
+
 
 create_database(merged_mafs, ref = 'hg19', prefix = "TCGA_mc3_maftools")
+}
 }

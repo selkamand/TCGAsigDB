@@ -3,8 +3,11 @@
 
 #' Create Sqlite database
 #'
-#' @param path_maf path to a maf file (e.g. pancancer MAF)  or a maf object
 #' @param ref which human reference genome to use
+#' @param maf a maf object, path to maf file, or data.frame in MAF format
+#' @inheritParams sigminerUtils::sig_analyse_mutations
+#' @param outdir outfile directory
+#' @param prefix prefix of output filenames
 #'
 #' @return invisible(NULL)
 #'
@@ -31,9 +34,10 @@
 #' # Or we can pull the data from maftools
 #' mafs <- lapply(maftools::tcgaAvailable()[['Study_Abbreviation']], maftools::tcgaLoad)
 #' merged_mafs <- maftools::merge_mafs(mafs)
-#' }
+#'
 #'
 #' create_database(merged_mafs, ref = 'hg19', prefix = "TCGA_mc3_maftools")
+#' }
 create_database <- function(maf, ref = c("hg38", "hg19"), metadata = NULL, outdir = getwd(), prefix = "cosmic_signatures"){
 
   # Set up
@@ -91,7 +95,9 @@ create_database <- function(maf, ref = c("hg38", "hg19"), metadata = NULL, outdi
 #' @export
 #'
 #' @examples
-#' \dontrun({create_tcga_pancan_database})
+#' \dontrun{
+#' create_tcga_pancan_database(ids = c('TCGA-CA-6717-01', 'TCGA-A2-A0T5-01', 'TCGA-CF-A9FF-01'))
+#' }
 create_tcga_pancan_database <- function(outdir = getwd(), ids = NULL){
 
   if (!requireNamespace("R.utils", quietly = TRUE))
