@@ -4,12 +4,14 @@
 \alias{create_tcga_pancan_database}
 \title{Create TCGA pan-cancer-atlas signature database}
 \usage{
-create_tcga_pancan_database(outdir = getwd(), ids = NULL)
+create_tcga_pancan_database(outdir = getwd(), ids = NULL, strict = FALSE)
 }
 \arguments{
 \item{outdir}{output directory}
 
-\item{ids}{a character vector of TCGA IDs to analyse. If NULL will run on all TCGA samples}
+\item{ids}{a character vector of TCGA IDs to analyse. If NULL will run on all TCGA samples. See \code{\link[=tcga_fetch_metadata]{tcga_fetch_metadata()}} for a full list of possible IDs}
+
+\item{strict}{throw an error when supplied IDs are not actually present in mutation dataset. If falws, will just warn and continue creating the signature database on those IDs which are present.}
 }
 \value{
 run for its side-effects. Invisibly returns NULL

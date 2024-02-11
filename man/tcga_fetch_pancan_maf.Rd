@@ -4,10 +4,12 @@
 \alias{tcga_fetch_pancan_maf}
 \title{Fetch MAF}
 \usage{
-tcga_fetch_pancan_maf(ids = NULL)
+tcga_fetch_pancan_maf(ids = NULL, strict = FALSE)
 }
 \arguments{
-\item{ids}{TCGA IDs. See \code{\link[=tcga_fetch_metadata]{tcga_fetch_metadata()}} for a full list of possible IDs. Set to NULL to gt all data}
+\item{ids}{a character vector of TCGA IDs to analyse. If NULL will run on all TCGA samples. See \code{\link[=tcga_fetch_metadata]{tcga_fetch_metadata()}} for a full list of possible IDs}
+
+\item{strict}{throw an error when supplied IDs are not actually present in mutation dataset. If falws, will just warn and continue creating the signature database on those IDs which are present.}
 }
 \value{
 maf data.frame

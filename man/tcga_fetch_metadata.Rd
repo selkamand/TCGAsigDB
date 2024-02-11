@@ -6,6 +6,9 @@
 \usage{
 tcga_fetch_metadata(ids = NULL)
 }
+\arguments{
+\item{ids}{a character vector of TCGA IDs to analyse. If NULL will run on all TCGA samples. See \code{\link[=tcga_fetch_metadata]{tcga_fetch_metadata()}} for a full list of possible IDs}
+}
 \value{
 data.frame with TCGA metadata
 }

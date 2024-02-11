@@ -90,7 +90,8 @@ create_database <- function(maf, ref = c("hg38", "hg19"), metadata = NULL, outdi
 #' Creates an sqlite database describing the mutational signatures present in every TCGA patient
 #'
 #' @param outdir output directory
-#' @param ids a character vector of TCGA IDs to analyse. If NULL will run on all TCGA samples
+#' @param ids a character vector of TCGA IDs to analyse. If NULL will run on all TCGA samples. See [tcga_fetch_metadata()] for a full list of possible IDs
+#' @param strict throw an error when supplied IDs are not actually present in mutation dataset. If falws, will just warn and continue creating the signature database on those IDs which are present.
 #' @return run for its side-effects. Invisibly returns NULL
 #' @export
 #'
@@ -98,7 +99,7 @@ create_database <- function(maf, ref = c("hg38", "hg19"), metadata = NULL, outdi
 #' \dontrun{
 #' create_tcga_pancan_database(ids = c('TCGA-CA-6717-01', 'TCGA-A2-A0T5-01', 'TCGA-CF-A9FF-01'))
 #' }
-create_tcga_pancan_database <- function(outdir = getwd(), ids = NULL){
+create_tcga_pancan_database <- function(outdir = getwd(), ids = NULL, strict = FALSE){
 
   if (!requireNamespace("R.utils", quietly = TRUE))
     cli::cli_abort("Package \"R.utils\" must be installed to use this function.")
@@ -118,6 +119,8 @@ create_tcga_pancan_database <- function(outdir = getwd(), ids = NULL){
 }
 
 #' Fetch TCGA metadata
+#'
+#' @inheritParams create_tcga_pancan_database
 #'
 #' @return data.frame with TCGA metadata
 #' @export
@@ -140,8 +143,8 @@ tcga_fetch_metadata <- function(ids = NULL){
 #'
 #' Fetch TCGA MC3 MAF
 #'
-#' @param ids TCGA IDs. See [tcga_fetch_metadata()] for a full list of possible IDs. Set to NULL to gt all data
-#' @param strict throw an error when supplied IDs are not actually present in mutation dataset. If falws, will just warn and continue creating the signature database on those IDs which are present.
+#' @inheritParams create_tcga_pancan_database
+#'
 #' @return maf data.frame
 #' @export
 #'
