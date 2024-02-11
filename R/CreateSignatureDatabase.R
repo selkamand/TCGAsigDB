@@ -141,11 +141,11 @@ tcga_fetch_metadata <- function(ids = NULL){
 #' Fetch TCGA MC3 MAF
 #'
 #' @param ids TCGA IDs. See [tcga_fetch_metadata()] for a full list of possible IDs. Set to NULL to gt all data
-#'
+#' @param strict throw an error when supplied IDs are not actually present in mutation dataset. If falws, will just warn and continue creating the signature database on those IDs which are present.
 #' @return maf data.frame
 #' @export
 #'
-tcga_fetch_pancan_maf <- function(ids = NULL){
+tcga_fetch_pancan_maf <- function(ids = NULL, strict = FALSE){
   df_pancan <- data.table::fread("https://tcga-pancan-atlas-hub.s3.us-east-1.amazonaws.com/download/mc3.v0.2.8.PUBLIC.xena.gz")
 
   # Filter for IDs we care about
@@ -159,10 +159,10 @@ tcga_fetch_pancan_maf <- function(ids = NULL){
     # Ensure All the IDs we want are actually present in the data
     nsamples <- dplyr::n_distinct(df_pancan$sample)
 
-    if (nsamples != length(ids))
-      cli::cli_abort("Only {nsamples} / {length(ids)} of the TCGA IDs supplied were observed in the data")
+    if (nsamples != length(ids) & strict)
+      cli::cli_abort("Only {nsamples} / {length(ids)} of the TCGA IDs supplied were observed in the data. ")
     else
-      cli::cli_alert("All {nsamples} / {length(ids)} of the TCGA IDs supplied were observed in the data")
+      cli::cli_alert_warning("All {nsamples} / {length(ids)} of the TCGA IDs supplied were observed in the data")
   }
 
   cli::cli_progress_step('Converting to MAF format')
