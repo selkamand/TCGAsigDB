@@ -1,3 +1,103 @@
+#' Create TCGA pan-cancer-atlas signature database
+#'
+#' Creates an sqlite database describing the mutational signatures present in every TCGA patient
+#'
+#' @param outdir output directory
+#' @param ids a character vector of TCGA IDs to analyse. If NULL will run on all TCGA samples. See [tcga_fetch_metadata()] for a full list of possible IDs
+#' @param strict throw an error when supplied IDs are not actually present in mutation dataset. If falws, will just warn and continue creating the signature database on those IDs which are present.
+#' @return run for its side-effects. Invisibly returns NULL
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' create_tcga_pancan_database(ids = c('TCGA-CA-6717-01', 'TCGA-A2-A0T5-01', 'TCGA-CF-A9FF-01'))
+#' }
+create_tcga_pancan_database <- function(outdir = getwd(), ids = NULL, strict = FALSE){
+
+  if (!requireNamespace("R.utils", quietly = TRUE))
+    cli::cli_abort("Package \"R.utils\" must be installed to use this function.")
+
+  cli::cli_progress_step('Streaming In TCGA PanCancerAtlas data')
+  df_pancan_meta <- tcga_fetch_metadata(ids = ids)
+  df_pancan_meta <- df_pancan_meta |>
+    dplyr::filter(sampleId %in% ids)
+
+  maf <- tcga_fetch_pancan_maf(ids = ids)
+
+
+  cli::cli_progress_step('Running Signature Analysis and Creating SQLITE database')
+  create_database(maf = maf, outdir = outdir, prefix = "TCGA_mc3_pancanatlas", ref = "hg19", metadata = df_pancan_meta)
+
+  return(invisible(NULL))
+}
+
+#' Fetch TCGA metadata
+#'
+#' @inheritParams create_tcga_pancan_database
+#'
+#' @return data.frame with TCGA metadata
+#' @export
+#'
+tcga_fetch_metadata <- function(ids = NULL){
+  df_pancan_meta <- data.table::fread("https://tcga-pancan-atlas-hub.s3.us-east-1.amazonaws.com/download/TCGA_phenotype_denseDataOnlyDownload.tsv.gz")
+  df_pancan_meta <- dplyr::select(df_pancan_meta, sampleId = sample, disease = `_primary_disease`, description = sample_type)
+
+  # Filter for only IDs of interest
+  if(!is.null(ids)){
+    df_pancan_meta <- df_pancan_meta |>
+      dplyr::filter(sampleId %in% ids)
+  }
+
+
+  return(df_pancan_meta)
+}
+
+#' Fetch MAF
+#'
+#' Fetch TCGA MC3 MAF
+#'
+#' @inheritParams create_tcga_pancan_database
+#'
+#' @return maf data.frame
+#' @export
+#'
+tcga_fetch_pancan_maf <- function(ids = NULL, strict = FALSE){
+  df_pancan <- data.table::fread("https://tcga-pancan-atlas-hub.s3.us-east-1.amazonaws.com/download/mc3.v0.2.8.PUBLIC.xena.gz")
+
+  # Filter for IDs we care about
+  if (!is.null(ids)) {
+    assertions::assert_character(ids)
+    assertions::assert_no_duplicates(ids)
+    df_pancan <- df_pancan |>
+      dplyr::filter(sample %in% ids)
+
+
+    # Ensure All the IDs we want are actually present in the data
+    nsamples <- dplyr::n_distinct(df_pancan$sample)
+
+    if (nsamples != length(ids) & strict)
+      cli::cli_abort("Only {nsamples} / {length(ids)} of the TCGA IDs supplied were observed in the data. To continue anyway, rerun with {.arg strict = TRUE}")
+    else
+      cli::cli_alert_warning("All {nsamples} / {length(ids)} of the TCGA IDs supplied were observed in the data")
+  }
+
+  cli::cli_progress_step('Converting to MAF format')
+  maf <- df_pancan |>
+    dplyr::rename(
+      Tumor_Sample_Barcode = sample,
+      Chromosome = chr,
+      Start_Position = start,
+      End_Position = end,
+      Reference_Allele = reference,
+      Tumor_Seq_Allele2 = alt,
+      Hugo_Symbol = gene,
+      Consequence = effect,
+      HGVSp_Short = Amino_Acid_Change
+    )
+
+  return(maf)
+}
+
 
 
 
@@ -85,102 +185,3 @@ create_database <- function(maf, ref = c("hg38", "hg19"), metadata = NULL, outdi
 }
 
 
-#' Create TCGA pan-cancer-atlas signature database
-#'
-#' Creates an sqlite database describing the mutational signatures present in every TCGA patient
-#'
-#' @param outdir output directory
-#' @param ids a character vector of TCGA IDs to analyse. If NULL will run on all TCGA samples. See [tcga_fetch_metadata()] for a full list of possible IDs
-#' @param strict throw an error when supplied IDs are not actually present in mutation dataset. If falws, will just warn and continue creating the signature database on those IDs which are present.
-#' @return run for its side-effects. Invisibly returns NULL
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' create_tcga_pancan_database(ids = c('TCGA-CA-6717-01', 'TCGA-A2-A0T5-01', 'TCGA-CF-A9FF-01'))
-#' }
-create_tcga_pancan_database <- function(outdir = getwd(), ids = NULL, strict = FALSE){
-
-  if (!requireNamespace("R.utils", quietly = TRUE))
-    cli::cli_abort("Package \"R.utils\" must be installed to use this function.")
-
-  cli::cli_progress_step('Streaming In TCGA PanCancerAtlas data')
-  df_pancan_meta <- tcga_fetch_metadata(ids = ids)
-  df_pancan_meta <- df_pancan_meta |>
-    dplyr::filter(sampleId %in% ids)
-
-  maf <- tcga_fetch_pancan_maf(ids = ids)
-
-
-  cli::cli_progress_step('Running Signature Analysis and Creating SQLITE database')
-  create_database(maf = maf, outdir = outdir, prefix = "TCGA_mc3_pancanatlas", ref = "hg19", metadata = df_pancan_meta)
-
-  return(invisible(NULL))
-}
-
-#' Fetch TCGA metadata
-#'
-#' @inheritParams create_tcga_pancan_database
-#'
-#' @return data.frame with TCGA metadata
-#' @export
-#'
-tcga_fetch_metadata <- function(ids = NULL){
-  df_pancan_meta <- data.table::fread("https://tcga-pancan-atlas-hub.s3.us-east-1.amazonaws.com/download/TCGA_phenotype_denseDataOnlyDownload.tsv.gz")
-  df_pancan_meta <- dplyr::select(df_pancan_meta, sampleId = sample, disease = `_primary_disease`, description = sample_type)
-
-  # Filter for only IDs of interest
-  if(!is.null(ids)){
-    df_pancan_meta <- df_pancan_meta |>
-      dplyr::filter(sampleId %in% ids)
-  }
-
-
-  return(df_pancan_meta)
-}
-
-#' Fetch MAF
-#'
-#' Fetch TCGA MC3 MAF
-#'
-#' @inheritParams create_tcga_pancan_database
-#'
-#' @return maf data.frame
-#' @export
-#'
-tcga_fetch_pancan_maf <- function(ids = NULL, strict = FALSE){
-  df_pancan <- data.table::fread("https://tcga-pancan-atlas-hub.s3.us-east-1.amazonaws.com/download/mc3.v0.2.8.PUBLIC.xena.gz")
-
-  # Filter for IDs we care about
-  if (!is.null(ids)) {
-    assertions::assert_character(ids)
-    assertions::assert_no_duplicates(ids)
-    df_pancan <- df_pancan |>
-      dplyr::filter(sample %in% ids)
-
-
-    # Ensure All the IDs we want are actually present in the data
-    nsamples <- dplyr::n_distinct(df_pancan$sample)
-
-    if (nsamples != length(ids) & strict)
-      cli::cli_abort("Only {nsamples} / {length(ids)} of the TCGA IDs supplied were observed in the data. ")
-    else
-      cli::cli_alert_warning("All {nsamples} / {length(ids)} of the TCGA IDs supplied were observed in the data")
-  }
-
-  cli::cli_progress_step('Converting to MAF format')
-  maf <- df_pancan |>
-    dplyr::rename(
-      Tumor_Sample_Barcode = sample,
-      Chromosome = chr,
-      Start_Position = start,
-      End_Position = end,
-      Reference_Allele = reference,
-      Tumor_Seq_Allele2 = alt,
-      Hugo_Symbol = gene,
-      Consequence = effect,
-      HGVSp_Short = Amino_Acid_Change
-    )
-
-  return(maf)
-}
