@@ -103,12 +103,50 @@ create_tcga_pancan_database <- function(outdir = getwd(), ids = NULL){
   if (!requireNamespace("R.utils", quietly = TRUE))
     cli::cli_abort("Package \"R.utils\" must be installed to use this function.")
 
-  cli::cli_progress_step('Streaming In TCGA PanCancerAtlas data ')
-  df_pancan <- data.table::fread("https://tcga-pancan-atlas-hub.s3.us-east-1.amazonaws.com/download/mc3.v0.2.8.PUBLIC.xena.gz")
-  df_pancan_meta <- data.table::fread("https://tcga-pancan-atlas-hub.s3.us-east-1.amazonaws.com/download/TCGA_phenotype_denseDataOnlyDownload.tsv.gz")
+  cli::cli_progress_step('Streaming In TCGA PanCancerAtlas data')
+  df_pancan_meta <- tcga_fetch_metadata(ids = ids)
   df_pancan_meta <- df_pancan_meta |>
-    dplyr::select(sampleId = sample, disease = `_primary_disease`, description = sample_type)
+    dplyr::filter(sampleId %in% ids)
 
+  maf <- tcga_fetch_pancan_maf(ids = ids)
+
+
+  cli::cli_progress_step('Running Signature Analysis and Creating SQLITE database')
+  create_database(maf = maf, outdir = outdir, prefix = "TCGA_mc3_pancanatlas", ref = "hg19", metadata = df_pancan_meta)
+
+  return(invisible(NULL))
+}
+
+#' Fetch TCGA metadata
+#'
+#' @return data.frame with TCGA metadata
+#' @export
+#'
+tcga_fetch_metadata <- function(ids = NULL){
+  df_pancan_meta <- data.table::fread("https://tcga-pancan-atlas-hub.s3.us-east-1.amazonaws.com/download/TCGA_phenotype_denseDataOnlyDownload.tsv.gz")
+  df_pancan_meta <- dplyr::select(df_pancan_meta, sampleId = sample, disease = `_primary_disease`, description = sample_type)
+
+  # Filter for only IDs of interest
+  if(!is.null(ids)){
+    df_pancan_meta <- df_pancan_meta |>
+      dplyr::filter(sampleId %in% ids)
+  }
+
+
+  return(df_pancan_meta)
+}
+
+#' Fetch MAF
+#'
+#' Fetch TCGA MC3 MAF
+#'
+#' @param ids TCGA IDs. See [tcga_fetch_metadata()] for a full list of possible IDs. Set to NULL to gt all data
+#'
+#' @return maf data.frame
+#' @export
+#'
+tcga_fetch_pancan_maf <- function(ids = NULL){
+  df_pancan <- data.table::fread("https://tcga-pancan-atlas-hub.s3.us-east-1.amazonaws.com/download/mc3.v0.2.8.PUBLIC.xena.gz")
 
   # Filter for IDs we care about
   if (!is.null(ids)) {
@@ -117,8 +155,6 @@ create_tcga_pancan_database <- function(outdir = getwd(), ids = NULL){
     df_pancan <- df_pancan |>
       dplyr::filter(sample %in% ids)
 
-    df_pancan_meta <- df_pancan_meta |>
-      dplyr::filter(sampleId %in% ids)
 
     # Ensure All the IDs we want are actually present in the data
     nsamples <- dplyr::n_distinct(df_pancan$sample)
@@ -143,11 +179,5 @@ create_tcga_pancan_database <- function(outdir = getwd(), ids = NULL){
       HGVSp_Short = Amino_Acid_Change
     )
 
-
-
-  cli::cli_progress_step('Running Signature Analysis and Creating SQLITE database')
-  create_database(maf = maf, outdir = outdir, prefix = "TCGA_mc3_pancanatlas", ref = "hg19", metadata = df_pancan_meta)
-
-  return(invisible(NULL))
+  return(maf)
 }
-

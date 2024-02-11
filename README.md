@@ -25,8 +25,22 @@ remotes::install_github('selkamand/TCGAsigDB')
 
 ## Quick Start
 
+Create A TCGA pancancer mutational signature database
+
 ``` r
 library(TCGAsigDB)
 
 create_tcga_pancan_database(ids = c('TCGA-CA-6717-01', 'TCGA-A2-A0T5-01', 'TCGA-CF-A9FF-01'))
+```
+
+If just interested in retrieving the TCGA data / metadata for your own
+study:
+
+``` r
+
+# Fetch TCGA Pan-Cancer Metadata
+tcga_metadata <- tcga_fetch_metadata()
+
+# Fetch TCGA pan-cancer MC3 MAF
+tcga_maf <- tcga_fetch_pancan_maf()
 ```
